@@ -3,29 +3,35 @@
 # Append string to file path before extension and modify directory.
 modify_path() {
 
-    while getopts 'd:' flag; do
+    while getopts 'd:a:' flag; do
         case "${flag}" in
-            d) dir="${OPTARG%/}" ;;
+            d) local dir="${OPTARG%/}" ;;
+            a) local append="${OPTARG}" ;;
             *) usage ;;
         esac
     done
     shift "$((OPTIND-1))"
 
-    local path="${1}"
-    if is_empty "${path}"; then
+    if [[ "${#}" -ne 1 ]]; then
+        >&2 echo "Error: 1 positional argument expected, received "${#}"."
         usage
         exit 1
+    else
+        local path="${1}"
     fi
 
-    local append="${2}"
-    echo "${dir}"
-    local dir="${dir-"${path%/*}"}"
+    dir="${dir-"${path%/*}"}"/
 
-    local extension="${path#*.}"
+    if [[ "${path}" == *"."* ]]; then
+        local extension=."${path#*.}"
+    else
+         >&2 echo "No extension detected - appending to end of path."
+    fi
+
     local filename="${path##*/}"
     local filename_rmext="${filename%%.*}"
 
-    echo "${dir}"/"${filename_rmext}""${append}"."${extension}"
+    echo "${dir}""${filename_rmext}""${append}""${extension}"
 
 }
 
