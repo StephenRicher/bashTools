@@ -17,9 +17,7 @@ main() {
     shift "$((OPTIND-1))"
 
     # Confirm positional arguments are valid files.
-    for file in "${@}"; do
-        is_file "${file}" || fail "Error: "${file}" is not a valid file."
-    done
+    ! all_files "${@}" && exit 1
 
     is_dir "${outdir}" || fail "Error: "${outdir}" is not a directory."
 
@@ -29,8 +27,6 @@ main() {
     export -f download_url
     parallel -j "${threads}" --colsep '\t' \
         download_url {1} {2} "${outdir}" "${cookie}" :::: <(cat "${@}")
-
-    >&2 echo lol
 }
 
 download_url() {
@@ -40,7 +36,7 @@ download_url() {
     local cookie="${4}"
     local outpath
 
-    if is_empty "${filename}"; then
+    if all_empty "${filename}"; then
         >&2 echo "Skipping empty line."
         return 0
     fi
@@ -49,28 +45,22 @@ download_url() {
         outpath=/dev/stdout
     else
         outpath="${outdir}"/"${filename}"
-        if is_file "${outpath}"; then
-            >&2 echo "Error: "${outpath}" already exists."
-        fi
+        any_files "${outpath}" && return 1
     fi
 
     >&2 echo "Writing file to "${outpath}""
-    if is_empty "${cookie}"; then
-        curl -L "${url}"  > "${outpath}"
-    else
-        curl -L -H "Cookie: "${cookie}"" "${url}"  > "${outpath}"
-    fi
 
-    if [[ "${rc}" -ne 0 ]]; then
-        >&2 echo "Error: "${url}" not properly downloaded."
-    fi
+    # Set to null if "${cookie}" is empty string
+    cookie=${cookie:+"${cookie}"}
+
+    curl -L -H "Cookie: "${cookie}"" "${url}"  > "${outpath}"
 }
 
 print_paths() {
     local files="${@}"
 
     while read -r filename url; do
-        if is_empty "${filename}"; then
+        if all_empty "${filename}"; then
             continue
         fi
         if [ "${filename}" != "-" ]; then
