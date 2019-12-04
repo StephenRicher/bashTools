@@ -14,7 +14,7 @@ get_sample () {
 
     all_empty "${sample}" \
         && fail "Error: No valid sample name detected in "${path}"" \
-        || echo "${sample::-1}"
+        || echo "${sample%?}"
 }
 
 fail() {
