@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# Exit 0 if ALL arguments are valid files.
+# Return 0 if ALL arguments are valid files.
 all_files() {
     local files=( "${@}" )
 
-    all_empty "${files[@]}" && fail "Error: No arguments provided." 1
+    all_empty "${files[@]}" && fail "Error: No arguments provided."
 
     for file in "${files[@]}"; do
         if [[ ! -f "${file}" ]]; then
@@ -24,4 +24,3 @@ fail() {
 
 
 all_files "${@}"
-
