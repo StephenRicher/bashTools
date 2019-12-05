@@ -18,14 +18,11 @@ main() {
     done
     shift "$((OPTIND-1))"
 
-    if any_empty -n 1 "${file}"; then
-       >&2 echo "Error: Missing mandatory arguments."
-        usage
-        exit 1
-    elif ! all_files "${file}"; then
-        usage
-        exit 1
-    fi
+    any_empty -n 1 "${file}" && fail "Error: Missing mandatory arguments."
+
+    all_files "${file}" || fail
+
+    all_dirs "${data_dir}" "${qc_dir}" || fail
 
     local cutadapt_params="${@}"
 
@@ -56,7 +53,7 @@ run_paired_cutadapt() {
     local forward_out="$(modify_path -d "${data_dir}" -a '-trim' "${forward}")"
     local reverse_out="$(modify_path -d "${data_dir}" -a '-trim' "${reverse}")"
 
-    local sample=$(get_sample "${forward}") || exit 1
+    local sample=$(get_sample "${forward}") || fail
 
     cutadapt --output "${forward_out}" \
              --paired-output "${reverse_out}" \
@@ -73,6 +70,13 @@ deinterleave() {
     local file="${1}"
 
     paste -s -d '\t\n' "${file}"
+}
+
+
+fail() {
+    all_empty "${@}" || >&2 echo "${1}"
+    usage
+    exit "${2-1}"
 }
 
 
