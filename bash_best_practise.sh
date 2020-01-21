@@ -14,29 +14,25 @@ readonly PROJECT_NAME=RNA-Seq
 # initially set as NOT readonly (to allow them to be modified in getopts) and
 # then set to readonly immediately after.
 cmdline() {
-
     # Set defaults for opt args.
     QC_DIR=./
     DATA_DIR=./
-    THREADS=6
+    THREADS=1
     OUT=/dev/stdout # Write output to stdout as default.
     REMOVE=FALSE
-    while getopts 'o:d:q:j:f' flag; do
+
+    while getopts 'o:d:q:@:f' flag; do
         case "${flag}" in
             o) OUT="${OPTARG}" ;;
             d) DATA_DIR="${OPTARG}"/ ;; # Append / to all directories.
             q) QC_DIR="${OPTARG}"/ ;;
-            j) THREADS="${OPTARG}" ;;
+            @) THREADS="${OPTARG}" ;;
             f) readonly REMOVE="TRUE" ;;
             *) fail ;;
         esac
     done
     # Set opt args as readonly.
-    readonly QC_DIR
-    readonly DATA_DIR
-    readonly THREADS
-    readonly OUT
-    readonly REMOVE
+    readonly QC_DIR DATA_DIR THREADS OUT REMOVE
     shift "$((OPTIND-1))"
 
     # Positional arguments should also be readonly.
@@ -50,9 +46,9 @@ cmdline() {
     all_files "${INPUT}" || fail
 
     # Check output directories exist.
-    #all_dirs "${QC_DIR}" || fail
+    all_dirs "${QC_DIR}" || fail
 
-    # Check if output file already exists - ignore /dev/ files.
+    # Check if output file already exists - ignore /dev/stdout.
     # If it exists then check if is OK to overwrite (-f flag set) else fail.
     [[ "${OUT}" != /dev/stdout ]] \
         && any_files "${OUT}" \
