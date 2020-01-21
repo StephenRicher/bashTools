@@ -13,14 +13,12 @@ modify_path() {
     shift "$((OPTIND-1))"
 
     if [[ "${#}" -ne 1 ]]; then
-        >&2 echo "Error: 1 positional argument expected, received "${#}"."
-        usage
-        exit 1
+        fail "1 positional argument expected, received "${#}"."
     else
         local path="${1}"
     fi
 
-    dir="${dir-"${path%/*}"}"/
+    dir="${dir-$(dirname "${path}")}"/
 
     if [[ "${path}" == *"."* ]]; then
         local extension=."${path#*.}"
@@ -33,6 +31,18 @@ modify_path() {
 
     echo "${dir}""${filename_rmext}""${append}""${extension}"
 
+}
+
+fail() {
+    local red='\033[0;31m'
+    local no_colour='\033[0m'
+
+    tput setaf 1
+    >&2 echo "Error in "${0}": "${FUNCNAME[1]}"."
+    all_empty "${@}" || >&2 echo "${1}"
+    tput sgr0
+    usage
+    exit "${2-1}"
 }
 
 usage() {
