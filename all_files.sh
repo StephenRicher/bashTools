@@ -6,6 +6,7 @@ all_files() {
 
     all_empty "${files[@]}" && fail "Error: No arguments provided."
 
+    local file
     for file in "${files[@]}"; do
         if [[ ! -f "${file}" ]]; then
             >&2 echo "Error: "${file}" is not a valid file."
